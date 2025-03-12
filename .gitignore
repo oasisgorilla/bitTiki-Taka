@@ -1,0 +1,29 @@
+# Node.js 관련
+node_modules/
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+.npm/
+
+# 환경 변수 및 설정 파일
+.env
+.env.local
+.env.*.local
+
+# Hardhat 관련
+cache/
+artifacts/
+coverage/
+typechain/
+typechain-types/
+
+# Hardhat Network 로그 및 임시 파일
+hardhat-network-logs/
+*.tsbuildinfo
+
+# IDE 및 에디터 관련
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
