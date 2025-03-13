@@ -9,10 +9,11 @@ contract BTTSwap {
     event PairCreated(address indexed token1, address indexed token2, address pair);
 
     function createPairs(address token1, address token2, string calldata token1Name, string calldata token2Name) external returns(address) { // 유동성 풀 페어 생성 함수
+        // 유효성 검사
         require(token1 != token2, "Identical address is not allowed"); // 같은 토큰끼리 페어를 생성하는 것은 불가능함
-        require(address(getPair[token1][token2]) == address(0), "Pair already exists");
+        require(address(getPair[token1][token2]) == address(0), "Pair already exists"); // 이미 존재하는 페어를 또 생성하는 것은 불가능함
 
-        BTTPool bttPool = new BTTPool();
+        BTTPool bttPool = new BTTPool(token1, token2); // 풀 생성
 
         getPair[token1][token2] = bttPool;
         getPair[token2][token1] = bttPool; // (1, 2)페어와 (2, 1)페어가 동일한 순서로 인식되도록 함
