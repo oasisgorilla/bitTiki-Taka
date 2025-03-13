@@ -14,7 +14,10 @@ contract BTTSwap {
         require(token1 != token2, "Identical address is not allowed"); // 같은 토큰끼리 페어를 생성하는 것은 불가능함
         require(address(getPair[token1][token2]) == address(0), "Pair already exists"); // 이미 존재하는 페어를 또 생성하는 것은 불가능함
 
-        BTTPool bttPool = new BTTPool(token1, token2); // 풀 생성
+        string memory liquidityTokenName = string(abi.encodePacked("Liquidity-", token1Name, "-", token2Name));
+        string memory liquidityTokenSymbol = string(abi.encodePacked("LP-", token1Name, "-", token2Name));
+        
+        BTTPool bttPool = new BTTPool(token1, token2, liquidityTokenName, liquidityTokenSymbol); // 풀 생성
 
         getPair[token1][token2] = bttPool;
         getPair[token2][token1] = bttPool; // (1, 2)페어와 (2, 1)페어가 동일한 순서로 인식되도록 함
