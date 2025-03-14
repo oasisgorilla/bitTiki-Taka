@@ -78,10 +78,10 @@ contract BTTPool {
     }
 
     // 스왑
-    function swapTokens(address fromToken, address toToken, uint256 amountIn, uint amountOut) external {
+    function swapTokens(address fromToken, address toToken, uint256 amountIn, uint256 amountOut) external {
         // 유효성 검사
         require(amountIn > 0 && amountOut > 0, "Amount must be greater than 0"); // 스왑수량이 0 이상이어야 함
-        require((fromToken == token1 && toToken == token2) || (fromToken == token1 && toToken == token2), "Tokens need to be pairs of this liquidity pool"); // 풀에 있는 페어여야 함
+        require((fromToken == token1 && toToken == token2) || (fromToken == token2 && toToken == token1), "Tokens need to be pairs of this liquidity pool"); // 풀에 있는 페어여야 함
         // 사용자와 풀의 잔고가 amountIn, amountOut보다 많아야 함
         IERC20 fromTokenContract = IERC20(fromToken);
         IERC20 toTokenContract = IERC20(toToken);
@@ -89,10 +89,10 @@ contract BTTPool {
         require(toTokenContract.balanceOf(address(this)) > amountOut, "Insufficient balance of tokenTo");
         // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
         uint256 expectedAmountOut;
-        if (fromToken == token1) {
-            expectedAmountOut = (reserve2 - constantK) / (reserve1 + amountIn);
+        if (fromToken == token1 && toToken == token2) {
+            expectedAmountOut = constantK / (reserve1 - amountIn) - reserve2;
         } else {
-            expectedAmountOut = (reserve1 - constantK) / (reserve2 + amountIn);
+            expectedAmountOut = constantK / (reserve2 - amountIn) - reserve1;
         }
         require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
         // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
@@ -108,6 +108,7 @@ contract BTTPool {
         }
         // constantK 확인
         require(reserve1 * reserve2 <= constantK, "Swap does not preserve constant formula");
+        _updateConstantFormula();
         emit Swap(msg.sender, amountIn, expectedAmountOut, fromToken, toToken);
     }
 
