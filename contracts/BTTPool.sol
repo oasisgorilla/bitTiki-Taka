@@ -90,7 +90,7 @@ contract BTTPool {
         // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
         uint256 expectedAmountOut;
         if (fromToken == token1) {
-            expectedAmountOut = (reserve2 - constantK) / (reserve1 + amountIn); // amountIn / reserve1 비율만큼 reserve2를 준다.
+            expectedAmountOut = (reserve2 - constantK) / (reserve1 + amountIn);
         } else {
             expectedAmountOut = (reserve1 * constantK) / (reserve2 + amountIn);
         }
