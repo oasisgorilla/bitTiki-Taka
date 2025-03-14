@@ -89,10 +89,10 @@ contract BTTPool {
         require(toTokenContract.balanceOf(address(this)) > amountOut, "Insufficient balance of tokenTo");
         // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
         uint256 expectedAmountOut;
-        if (fromToken == token1 && toToken == token2) {
-            expectedAmountOut = (reserve2 * amountIn) / reserve1; // amountIn / reserve1 비율만큼 reserve2를 준다.
+        if (fromToken == token1) {
+            expectedAmountOut = (reserve2 - constantK) / (reserve1 + amountIn); // amountIn / reserve1 비율만큼 reserve2를 준다.
         } else {
-            expectedAmountOut = (reserve1 * amountIn) / reserve2;
+            expectedAmountOut = (reserve1 * constantK) / (reserve2 + amountIn);
         }
         require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
         // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
