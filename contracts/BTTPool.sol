@@ -2,13 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "./BTTLiquidityToken.sol";
-import "@openzeppelin/contracts/token/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract BTTPool {
     using Math for uint;
-    using SafeMath for uint;
 
     // 풀 주소
     address public token1;
@@ -44,9 +42,9 @@ contract BTTPool {
        uint256 totalSupplyOfToken = liquidityToken.totalSupply();
        if (totalSupplyOfToken == 0) {
         // 최초 유동성
-        liquidity = amountToken1.mul(amountToken2).sqrt();
+        liquidity = (amountToken1 * amountToken2).sqrt();
        } else {
-        liquidity = amountToken1.mul(totalSupplyOfToken).div(reserve1).min(amountToken2.mul(totalSupplyOfToken).div(reserve2));
+        liquidity = ((amountToken1 * totalSupplyOfToken) / reserve1).min((amountToken2 * totalSupplyOfToken) / reserve2);
        }
        liquidityToken.mint(msg.sender, liquidity); // 유동성을 추가한 사람에게 LP토큰 전송
        // amountToken1,2를 풀에 전송
@@ -92,9 +90,9 @@ contract BTTPool {
         // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
         uint256 expectedAmountOut;
         if (fromToken == token1 && toToken == token2) {
-            expectedAmountOut = reserve2.mul(amountIn).div(reserve1); // amountIn / reserve1 비율만큼 reserve2를 준다.
+            expectedAmountOut = (reserve2 * amountIn) / reserve1; // amountIn / reserve1 비율만큼 reserve2를 준다.
         } else {
-            expectedAmountOut = reserve1.mul(amountIn).div(reserve2);
+            expectedAmountOut = (reserve1 * amountIn) / reserve2;
         }
         require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
         // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
@@ -102,20 +100,20 @@ contract BTTPool {
         require(toTokenContract.transfer(msg.sender, expectedAmountOut), "Transfer of token to failed"); // 풀에서 toToken을 expectedAmountOut만큼 사용자 지갑으로 전송
         // reserve1, 2를 업데이트
         if (fromToken == token1 && toToken == token2) {
-            reserve1 = reserve1.add(amountIn);
-            reserve2 = reserve2.sub(expectedAmountOut);
+            reserve1 = reserve1 + amountIn;
+            reserve2 = reserve2 - expectedAmountOut;
         } else {
-            reserve1 = reserve1.sub(expectedAmountOut);
-            reserve2 = reserve2.add(amountIn);
+            reserve1 = reserve1 - expectedAmountOut;
+            reserve2 = reserve2 + amountIn;
         }
         // constantK 확인
-        require(reserve1.mul(reserve2) == constantK, "Swap does not preserve constant formula");
+        require(reserve1 * reserve2 == constantK, "Swap does not preserve constant formula");
         emit Swap(msg.sender, amountIn, expectedAmountOut, fromToken, toToken);
     }
 
     // constantK를 업데이트
     function _updateConstantFormula() internal {
-        constantK = reserve1.mul(reserve2);
+        constantK = reserve1 * reserve2;
         require(constantK > 0, "Constant formula not updated"); // 검증 필요
     }
 }
