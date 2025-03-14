@@ -92,7 +92,7 @@ contract BTTPool {
         if (fromToken == token1) {
             expectedAmountOut = (reserve2 - constantK) / (reserve1 + amountIn);
         } else {
-            expectedAmountOut = (reserve1 * constantK) / (reserve2 + amountIn);
+            expectedAmountOut = (reserve1 - constantK) / (reserve2 + amountIn);
         }
         require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
         // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
