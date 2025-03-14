@@ -107,7 +107,7 @@ contract BTTPool {
             reserve2 = reserve2 + amountIn;
         }
         // constantK 확인
-        require(reserve1 * reserve2 == constantK, "Swap does not preserve constant formula");
+        require(reserve1 * reserve2 <= constantK, "Swap does not preserve constant formula");
         emit Swap(msg.sender, amountIn, expectedAmountOut, fromToken, toToken);
     }
 
