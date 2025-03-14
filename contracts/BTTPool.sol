@@ -48,8 +48,32 @@ contract BTTPool {
        reserve1 += amountToken1;
        reserve2 += amountToken2;
        // constantK를 업데이트
-       constantK = reserve1.mul(reserve2);
-       require(constantK > 0, "Constant formula not updated"); // 검증 필요
+       _updateConstantFormula();
 
+    }
+
+    // 유동성 제거 함수
+    function removeLiquidity(uint amountOfLiquidity) external {
+        uint256 totalSupply = liquidityToken.totalSupply();
+        require(amountOfLiquidity <= totalSupply, "Liquidity is more than total supply");
+        // 유동성 소각
+        liquidityToken.burn(msg.sender, amountOfLiquidity);
+        // token1, 2를 LP에게 전송
+        uint256 amount1 = (reserve1 * amountOfLiquidity) / totalSupply; // 전체 풀에서 LP토큰 비율만큼 amount설정
+        uint256 amount2 = (reserve2 * amountOfLiquidity) / totalSupply;
+
+        require(IERC20(token1).transfer(msg.sender, amount1), "Transfer of token failed");
+        require(IERC20(token2).transfer(msg.sender, amount2), "Transfer of token failed");
+        // reserve1, 2를 업데이트
+        reserve1 -= amount1;
+        reserve2 -= amount2;
+        // constantK를 업데이트
+        _updateConstantFormula();
+    }
+
+    // constantK를 업데이트
+    function _updateConstantFormula() internal {
+        constantK = reserve1.mul(reserve2);
+        require(constantK > 0, "Constant formula not updated"); // 검증 필요
     }
 }

@@ -12,4 +12,8 @@ contract BTTLiquidityToken is ERC20, AccessControl {
     function mint(address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _mint(to, amount);
     }
+
+    function burn(address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _burn(to, amount);
+    }
 }
