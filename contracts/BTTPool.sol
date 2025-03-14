@@ -23,6 +23,14 @@ contract BTTPool {
 
     BTTLiquidityToken public liquidityToken;
 
+    event Swap (
+        address indexed sender,
+        uint256 amountIn,
+        uint256 amountOut,
+        address tokenIn,
+        address tokenOut
+    );
+
     constructor(address _token1, address _token2, string memory _liquidityTokenName, string memory _liquidityTokenSymbol) {
         token1 = _token1;
         token2 = _token2;
@@ -69,6 +77,40 @@ contract BTTPool {
         reserve2 -= amount2;
         // constantK를 업데이트
         _updateConstantFormula();
+    }
+
+    // 스왑
+    function swapTokens(address fromToken, address toToken, uint256 amountIn, uint amountOut) external {
+        // 유효성 검사
+        require(amountIn > 0 && amountOut > 0, "Amount must be greater than 0"); // 스왑수량이 0 이상이어야 함
+        require((fromToken == token1 && toToken == token2) || (fromToken == token1 && toToken == token2), "Tokens need to be pairs of this liquidity pool"); // 풀에 있는 페어여야 함
+        // 사용자와 풀의 잔고가 amountIn, amountOut보다 많아야 함
+        IERC20 fromTokenContract = IERC20(fromToken);
+        IERC20 toTokenContract = IERC20(toToken);
+        require(fromTokenContract.balanceOf(msg.sender) > amountIn, "Insufficient balance of tokenFrom");
+        require(toTokenContract.balanceOf(address(this)) > amountOut, "Insufficient balance of tokenTo");
+        // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
+        uint256 expectedAmountOut;
+        if (fromToken == token1 && toToken == token2) {
+            expectedAmountOut = reserve2.mul(amountIn).div(reserve1); // amountIn / reserve1 비율만큼 reserve2를 준다.
+        } else {
+            expectedAmountOut = reserve1.mul(amountIn).div(reserve2);
+        }
+        require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
+        // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
+        require(fromTokenContract.transferFrom(msg.sender, address(this), amountIn), "Transfer of token from failed"); // 사용자 지갑에서 fromToken을 amountIn만큼 유동성 풀로 전송
+        require(toTokenContract.transfer(msg.sender, expectedAmountOut), "Transfer of token to failed"); // 풀에서 toToken을 expectedAmountOut만큼 사용자 지갑으로 전송
+        // reserve1, 2를 업데이트
+        if (fromToken == token1 && toToken == token2) {
+            reserve1 = reserve1.add(amountIn);
+            reserve2 = reserve2.sub(expectedAmountOut);
+        } else {
+            reserve1 = reserve1.sub(expectedAmountOut);
+            reserve2 = reserve2.add(amountIn);
+        }
+        // constantK 확인
+        require(reserve1.mul(reserve2) == constantK, "Swap does not preserve constant formula");
+        emit Swap(msg.sender, amountIn, expectedAmountOut, fromToken, toToken);
     }
 
     // constantK를 업데이트
