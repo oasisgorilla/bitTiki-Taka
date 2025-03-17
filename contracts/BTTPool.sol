@@ -90,9 +90,9 @@ contract BTTPool {
         // 계산 후의 amountOut이 예상 값과 일치하는지 여부 확인
         uint256 expectedAmountOut;
         if (fromToken == token1 && toToken == token2) {
-            expectedAmountOut = constantK / (reserve1 - amountIn) - reserve2;
+            expectedAmountOut = (constantK / (reserve1 - amountIn)) - reserve2;
         } else {
-            expectedAmountOut = constantK / (reserve2 - amountIn) - reserve1;
+            expectedAmountOut = (constantK / (reserve2 - amountIn)) - reserve1;
         }
         require(amountOut <= expectedAmountOut, "Swap does not preserve constant formula");
         // amountIn을 유동성 풀로, amountOut을 사용자에게 전송
@@ -116,5 +116,16 @@ contract BTTPool {
     function _updateConstantFormula() internal {
         constantK = reserve1 * reserve2;
         require(constantK > 0, "Constant formula not updated"); // 검증 필요
+    }
+
+    // output을 미리 계산
+    function estimateOutputAmount(uint256 amountIn, address fromToken) public view returns(uint256 expectedAmountOut) {
+        require(amountIn > 0, "Amount must be greater than 0");
+        require(fromToken == token1 || fromToken == token2, "Need to be a token in this pair");
+        if (fromToken == token1) {
+            expectedAmountOut = (constantK / (reserve1 - amountIn)) - reserve2;
+        } else {
+            expectedAmountOut = (constantK / (reserve2 - amountIn)) - reserve1;
+        }
     }
 }
